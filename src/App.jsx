@@ -1,26 +1,57 @@
-// src/App.jsx
-import { useContext, useState } from "react";
-import { Routes, Route } from "react-router"; // Import React Router
+import { useContext, useState, useEffect } from "react";
+import { Routes, Route, useNavigate } from "react-router"; // Import React Router
 import { UserContext } from "./contexts/UserContext";
-
+import * as hootService from "./services/hootService";
+import HootList from "./components/HootList/HootList";
+import HootDetails from "./components/HootDetails/HootDetails";
 import NavBar from "./components/NavBar/NavBar";
-// Import the SignUpForm component
+import HootForm from "./components/HootForm/HootForm";
 import SignUpForm from "./components/SignUpForm/SignUpForm";
 import SignInForm from "./components/SignInForm/SignInForm";
 import Landing from "./components/Landing/Landing";
 import Dashboard from "./components/Dashboard/Dashboard";
 
 const App = () => {
+	const navigate = useNavigate();
 	const { user } = useContext(UserContext);
 
+	const [hoots, setHoots] = useState([]);
+
+	const handleAddHoot = async (hootFormData) => {
+		const newHoot = await hootService.create(hootFormData);
+		setHoots([newHoot, ...hoots]);
+		navigate("/hoots");
+	};
+
+	useEffect(() => {
+		const fetchAllHoots = async () => {
+			const hootsData = await hootService.index();
+			setHoots(hootsData);
+		};
+		if (user) fetchAllHoots();
+	}, [user]);
 	return (
 		<>
 			<NavBar />
-			{/* Add the Routes component to wrap our individual routes*/}
 			<Routes>
 				<Route path="/" element={user ? <Dashboard /> : <Landing />} />
-				<Route path="/sign-up" element={<SignUpForm />} />
-				<Route path="/sign-in" element={<SignInForm />} />
+				{user ? (
+					<>
+						{/* Protected routes (available only to signed-in users) */}
+						<Route path="/hoots" element={<HootList hoots={hoots} />} />
+						<Route
+							path="/hoots/new"
+							element={<HootForm handleAddHoot={handleAddHoot} />}
+						/>
+						<Route path="/hoots/:hootId" element={<HootDetails />} />
+					</>
+				) : (
+					<>
+						{/* Non-user routes (available only to guests) */}
+						<Route path="/sign-up" element={<SignUpForm />} />
+						<Route path="/sign-in" element={<SignInForm />} />
+					</>
+				)}
 			</Routes>
 		</>
 	);
