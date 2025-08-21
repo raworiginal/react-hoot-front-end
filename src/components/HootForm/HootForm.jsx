@@ -6,20 +6,12 @@ import * as hootService from "../../services/hootService";
 
 const HootForm = (props) => {
 	const { hootId } = useParams();
-	console.log(hootId);
+
 	const [formData, setFormData] = useState({
 		title: "",
 		text: "",
 		category: "News",
 	});
-	useEffect(() => {
-		const fetchHoot = async () => {
-			const hootData = await hootService.show(hootId);
-			setFormData(hootData);
-		};
-		if (hootId) fetchHoot();
-		return () => setFormData({ title: "", text: "", category: "News" });
-	}, hootId);
 
 	const handleChange = (evt) => {
 		setFormData({ ...formData, [evt.target.name]: evt.target.value });
@@ -32,8 +24,16 @@ const HootForm = (props) => {
 		} else {
 			props.handleAddHoot(formData);
 		}
-		props.handleAddHoot(formData);
 	};
+
+	useEffect(() => {
+		const fetchHoot = async () => {
+			const hootData = await hootService.show(hootId);
+			setFormData(hootData);
+		};
+		if (hootId) fetchHoot();
+		return () => setFormData({ title: "", text: "", category: "News" });
+	}, [hootId]);
 
 	return (
 		<main>
