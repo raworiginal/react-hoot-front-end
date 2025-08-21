@@ -1,16 +1,28 @@
-import { useParams } from "react-router";
-import { useState, useEffect } from "react";
+import { useParams, Link } from "react-router";
+import { useState, useEffect, useContext } from "react";
 import * as hootService from "../../services/hootService";
 import CommentForm from "../CommentForm/CommentForm";
+import { UserContext } from "../../contexts/UserContext";
 
-const HootDetails = () => {
+const HootDetails = (props) => {
 	const { hootId } = useParams();
+	const { user } = useContext(UserContext);
 	const [hoot, setHoot] = useState(null);
 
 	const handleAddComment = async (commentFormData) => {
 		const newComment = await hootService.createComment(hootId, commentFormData);
-		setHoot({ ...hoot, comment: [...hoot.comments, newComment] });
+		setHoot({ ...hoot, comments: [...hoot.comments, newComment] });
 	};
+
+	const handleDeleteComment = async (commentId) => {
+		console.log("commentId", commentId);
+		const deletedComment = await hootService.deleteComment(hootId, commentId);
+		setHoot({
+			...hoot,
+			comments: hoot.comments.filter((comment) => comment._id !== commentId),
+		});
+	};
+
 	useEffect(() => {
 		const fetchHoot = async () => {
 			const hootData = await hootService.show(hootId);
@@ -30,6 +42,22 @@ const HootDetails = () => {
 						{`${hoot.author.username} posted on
             ${new Date(hoot.createdAt).toLocaleDateString()}`}
 					</p>
+
+					{/* Delete & Edit Buttons */}
+					{hoot.author._id === user._id && (
+						<>
+							<Link to={`/hoots/${hootId}/edit`} role="button">
+								edit
+							</Link>
+							<button
+								onClick={() => {
+									props.handleDeleteHoot(hootId);
+								}}
+								className="contrast">
+								Delete
+							</button>
+						</>
+					)}
 				</header>
 				<p>{hoot.text}</p>
 			</section>
@@ -47,6 +75,14 @@ const HootDetails = () => {
 							</p>
 						</header>
 						<p>{comment.text}</p>
+						{comment.author._id === user._id && (
+							<>
+								<Link to={`/hoots`}>Edit</Link>
+								<button onClick={() => handleDeleteComment(comment._id)}>
+									Delete Comment
+								</button>
+							</>
+						)}
 					</article>
 				))}
 			</section>
