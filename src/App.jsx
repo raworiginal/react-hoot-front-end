@@ -22,7 +22,6 @@ const App = () => {
   const handleAddHoot = async (hootFormData) => {
     const newHoot = await hootService.create(hootFormData);
     setHoots([newHoot, ...hoots]);
-    navigate('/hoots');
     navigate("/hoots");
   }
 
